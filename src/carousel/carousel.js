@@ -48,6 +48,9 @@ angular.module('ui.bootstrap.carousel', [])
     self.currentSlide = slide;
     currentIndex = index;
 
+    // every time you change the index, prefetch adjacent slides
+    $scope.$evalAsync(self.preFetchSlides);
+
     //every time you change slides, reset the timer
     restartTimer();
   }
@@ -170,6 +173,15 @@ angular.module('ui.bootstrap.carousel', [])
     }
   };
 
+  self.preFetchSlides = function () {
+    var fetchIndex = self.getCurrentIndex();
+    var fwdIndex = (fetchIndex + 1) % slides.length;
+    var revIndex = fetchIndex - 1 < 0 ? slides.length - 1 : fetchIndex - 1;
+    angular.extend(getSlideByIndex(fetchIndex),{fetch: true});
+    angular.extend(getSlideByIndex(fwdIndex),{fetch: true});
+    angular.extend(getSlideByIndex(revIndex),{fetch: true});
+  };
+
   $scope.$watch('noTransition', function(noTransition) {
     $element.data(NO_TRANSITION, noTransition);
   });
@@ -281,7 +293,8 @@ function CarouselDemoCtrl($scope) {
     templateUrl: 'template/carousel/slide.html',
     scope: {
       active: '=?',
-      index: '=?'
+      index: '=?',
+      fetch: '=?'
     },
     link: function (scope, element, attrs, carouselCtrl) {
       carouselCtrl.addSlide(scope, element);
